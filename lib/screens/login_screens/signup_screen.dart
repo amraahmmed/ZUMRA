@@ -22,7 +22,9 @@ class _SignUpScreenState extends State<SignUpScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) =>  SetPasswordScreen(),
+          builder: (context) => SetPasswordScreen(
+            email: _emailController.text.trim(),
+          ),
         ),
       );
     }

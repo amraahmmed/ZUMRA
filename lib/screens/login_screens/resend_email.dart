@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:zumra/screens/login_screens/login_screen.dart';
+import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
@@ -15,16 +16,41 @@ class ResendEmailScreen extends StatefulWidget {
 class _ResendEmailScreenState extends State<ResendEmailScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
 
-  void _next() {
+  Future<void> _resendEmail() async {
     if (_formKey.currentState!.validate()) {
-      debugPrint("Email: ${_emailController.text}");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await AuthService.resendConfirmationEmail(email: _emailController.text);
+        debugPrint("Email Resent: ${_emailController.text}");
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+                content: Text('Confirmation email resent successfully!')),
+          );
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const LoginScreen(),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString())),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -114,10 +140,12 @@ class _ResendEmailScreenState extends State<ResendEmailScreen> {
                   const Spacer(),
 
                   /// Button
-                  CustomButton(
-                    text: "Next",
-                    onPressed: _next
-                  ),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : CustomButton(
+                          text: "Next",
+                          onPressed: _resendEmail,
+                        ),
 
                   AppSpace.h20,
                 ],

@@ -6,7 +6,8 @@ import 'package:zumra/widgets/custom_sizedbox.dart';
 import 'package:zumra/widgets/custom_textfield.dart';
 
 class SetPasswordScreen extends StatefulWidget {
-  const SetPasswordScreen({super.key});
+  final String email;
+  const SetPasswordScreen({super.key, required this.email});
 
   @override
   State<SetPasswordScreen> createState() => _SetPasswordScreenState();
@@ -26,8 +27,9 @@ class _SetPasswordScreenState extends State<SetPasswordScreen> {
       Navigator.push(
         context,
         MaterialPageRoute(
-          builder: (context) => const UserDetailsScreen(
-            email: "email",
+          builder: (context) => UserDetailsScreen(
+            email: widget.email,
+            password: _passwordController.text.trim(),
           ),
         ),
       );

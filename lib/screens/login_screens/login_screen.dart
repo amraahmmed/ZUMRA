@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:zumra/screens/app/home_screen.dart';
 import 'package:zumra/screens/login_screens/resend_email.dart';
 import 'package:zumra/screens/login_screens/signup_screen.dart';
+import 'package:zumra/screens/login_screens/forgot_password_screen.dart';
+import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
 import 'package:zumra/widgets/custom_textfield.dart';
 import 'package:zumra/widgets/custom_button.dart';
-import 'forgot_password_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -21,11 +23,37 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _isLoading = false;
+  String? _apiError;
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      debugPrint("Email: ${_emailController.text}");
-      debugPrint("Password: ${_passwordController.text}");
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() {
+      _isLoading = true;
+      _apiError = null;
+    });
+
+    try {
+      await AuthService.login(
+        userName: _emailController.text.trim(),
+        password: _passwordController.text.trim(),
+      );
+
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (_) => const HomeScreen(),
+        ),
+      );
+    } catch (e) {
+      setState(() {
+        _apiError = e.toString().replaceAll('Exception:', '');
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -42,6 +70,7 @@ class _LoginScreenState extends State<LoginScreen> {
       resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
+          /// ===== Background =====
           Positioned.fill(
             child: Image.asset(
               "assets/images/bg.jpg",
@@ -49,7 +78,7 @@ class _LoginScreenState extends State<LoginScreen> {
             ),
           ),
 
-          /// Overlay
+          /// ===== Overlay =====
           Container(color: Colors.white.withOpacity(0.7)),
 
           Padding(
@@ -58,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 AppSpace.h50,
 
+                /// Back
                 Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
@@ -75,6 +105,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 AppSpace.h40,
+
+                /// ===== Form =====
                 Form(
                   key: _formKey,
                   child: Column(
@@ -121,14 +153,13 @@ class _LoginScreenState extends State<LoginScreen> {
                             return "Password must be at least 8 characters";
                           }
                           if (!RegExp(r'(?=.*[A-Z])').hasMatch(value)) {
-                            return 'Must contain an uppercase letter';
+                            return "Must contain uppercase letter";
                           }
                           if (!RegExp(r'(?=.*[0-9])').hasMatch(value)) {
-                            return 'Must contain a number';
+                            return "Must contain number";
                           }
-                          if (!RegExp(r'(?=.*[!@#$%^&*(),.?":{}|<>])')
-                              .hasMatch(value)) {
-                            return 'Must contain a special character';
+                          if (!RegExp(r'(?=.*[!@#$%^&*])').hasMatch(value)) {
+                            return "Must contain special character";
                           }
                           return null;
                         },
@@ -137,8 +168,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
 
+                if (_apiError != null) ...[
+                  AppSpace.h16,
+                  Text(
+                    _apiError!,
+                    style: const TextStyle(color: Colors.red, fontSize: 14),
+                  ),
+                ],
+
                 AppSpace.h16,
 
+                /// Forget Password
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -161,6 +201,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 AppSpace.h8,
 
+                /// Resend Confirmation
                 Align(
                   alignment: Alignment.centerRight,
                   child: GestureDetector(
@@ -183,6 +224,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 AppSpace.h64,
 
+                /// Register
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -192,12 +234,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     GestureDetector(
                       onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (_) => const SignUpScreen(),
-                        ),
-                      );
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const SignUpScreen(),
+                          ),
+                        );
                       },
                       child: Text(
                         "Register",
@@ -210,14 +252,13 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
 
                 AppSpace.h8,
+
+                /// Google Login
                 OutlinedButton.icon(
-                  onPressed: () {
-                    debugPrint("Sign in with Google");
-                  },
+                  onPressed: () {},
                   icon: SvgPicture.asset(
                     "assets/icons/google.svg",
-                    height: 32,
-                    width: 32,
+                    height: 28,
                   ),
                   label: Text(
                     "Continue With Google",
@@ -234,10 +275,13 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 AppSpace.h8,
 
+                /// Login Button
                 CustomButton(
-                  text: "Sign in",
-                  onPressed: _login,
+                  text: _isLoading ? "Signing in..." : "Sign in",
+                  onPressed: _isLoading ? null : _login,
                 ),
+
+                AppSpace.h20,
               ],
             ),
           ),

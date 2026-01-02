@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
@@ -15,16 +16,36 @@ class ForgotPasswordScreen extends StatefulWidget {
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _emailController = TextEditingController();
+  bool _isLoading = false;
 
-  void _sendCode() {
+  Future<void> _sendCode() async {
     if (_formKey.currentState!.validate()) {
-      debugPrint("Email: ${_emailController.text}");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const CodeScreen(),
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await AuthService.forgotPassword(email: _emailController.text);
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CodeScreen(email: _emailController.text),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(e.toString())),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -107,7 +128,8 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                               return "Email is required";
                             }
                             if (!RegExp(
-                              r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              // ignore: valid_regexps
+                              r'^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$',
                             ).hasMatch(value)) {
                               return "Enter a valid email";
                             }
@@ -121,10 +143,12 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                   const Spacer(),
 
                   /// Button
-                  CustomButton(
-                    text: "Send code",
-                    onPressed: _sendCode,
-                  ),
+                  _isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : CustomButton(
+                          text: "Send code",
+                          onPressed: _sendCode,
+                        ),
 
                   AppSpace.h20,
                 ],

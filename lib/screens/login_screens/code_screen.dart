@@ -1,13 +1,15 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:zumra/screens/login_screens/reset_password_screen.dart';
+import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
 import 'package:zumra/widgets/otp_field.dart';
 
 class CodeScreen extends StatefulWidget {
-  const CodeScreen({super.key});
+  final String email;
+  const CodeScreen({super.key, required this.email});
 
   @override
   State<CodeScreen> createState() => _CodeScreenState();
@@ -15,6 +17,7 @@ class CodeScreen extends StatefulWidget {
 
 class _CodeScreenState extends State<CodeScreen> {
   late final TextEditingController _otpController;
+  bool _isLoading = false;
   String? _error;
 
   Timer? _timer;
@@ -51,30 +54,77 @@ class _CodeScreenState extends State<CodeScreen> {
     });
   }
 
-  void _resendCode() {
-    if (!_canResend) return;
-    _startTimer();
+  Future<void> _resendCode() async {
+    if (!_canResend || _isLoading) return;
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await AuthService.resendConfirmationEmail(
+        email: widget.email,
+      );
+      _startTimer();
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A new code has been sent.')),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
+    }
   }
 
-    void _submit() {
+  Future<void> _submit() async {
     if (_otpController.text.length != 6) {
       setState(() {
         _error = "Please enter the 6-digit code";
       });
-    } else {
-      setState(() {
-        _error = null;
-      });
-      debugPrint("OTP: ${_otpController.text}");
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const ResetPasswordScreen(),
-        ),
+      return;
+    }
+    setState(() {
+      _isLoading = true;
+      _error = null;
+    });
+
+    try {
+      await AuthService.verifyOTP(
+        email: widget.email,
+        otp: _otpController.text,
       );
+      if (mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ResetPasswordScreen(email: widget.email),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _error = e.toString();
+        });
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-
 
   @override
   void dispose() {
@@ -133,6 +183,7 @@ class _CodeScreenState extends State<CodeScreen> {
                   AppSpace.h16,
                   OtpField(
                     controller: _otpController,
+                    onCompleted: (pin) => _submit(),
                   ),
                   if (_error != null) ...[
                     AppSpace.h8,
@@ -147,25 +198,28 @@ class _CodeScreenState extends State<CodeScreen> {
                   const Spacer(),
                   Center(
                     child: GestureDetector(
-                      onTap: _canResend ? _resendCode : null,
-                      child: Text(
-                        _canResend
-                            ? "Didn’t receive a code? Resend"
-                            : "Resend code in $_timerText",
-                        style: AppTypography.inputLabel.copyWith(
-                          decoration: _canResend
-                              ? TextDecoration.underline
-                              : TextDecoration.none,
-                          color:
-                              _canResend ? Colors.black : Colors.grey,
-                        ),
-                      ),
+                      onTap: _resendCode,
+                      child: _isLoading && !_canResend
+                          ? const CircularProgressIndicator()
+                          : Text(
+                              _canResend
+                                  ? "Didn’t receive a code? Resend"
+                                  : "Resend code in $_timerText",
+                              style: AppTypography.inputLabel.copyWith(
+                                decoration: _canResend
+                                    ? TextDecoration.underline
+                                    : TextDecoration.none,
+                                color:
+                                    _canResend ? Colors.black : Colors.grey,
+                              ),
+                            ),
                     ),
                   ),
                   AppSpace.h16,
                   CustomButton(
                     text: "Done",
                     onPressed: _submit,
+                    isLoading: _isLoading,
                   ),
                   AppSpace.h20,
                 ],

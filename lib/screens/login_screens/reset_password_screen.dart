@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/screens/login_screens/password_changed_screen.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
@@ -6,7 +7,8 @@ import 'package:zumra/widgets/custom_sizedbox.dart';
 import 'package:zumra/widgets/custom_textfield.dart';
 
 class ResetPasswordScreen extends StatefulWidget {
-  const ResetPasswordScreen({super.key});
+  final String email;
+  const ResetPasswordScreen({super.key, required this.email});
 
   @override
   State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
@@ -19,15 +21,43 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
+  bool _isLoading = false;
 
-  void _changePassword() {
+  void _changePassword() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => const PasswordChangedScreen(),
-        ),
-      );
+      setState(() {
+        _isLoading = true;
+      });
+      try {
+        await AuthService.resetPassword(
+          email: widget.email,
+          password: _passwordController.text,
+          confirmPassword: _confirmPasswordController.text,
+        );
+        if (mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const PasswordChangedScreen(),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(e.toString()),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      } finally {
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
+      }
     }
   }
 
@@ -138,6 +168,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                   CustomButton(
                     text: "Change my Password",
                     onPressed: _changePassword,
+                    isLoading: _isLoading,
                   ),
                   AppSpace.h20,
                 ],

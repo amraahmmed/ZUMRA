@@ -2,15 +2,18 @@ import 'package:flutter/material.dart';
 import 'package:pinput/pinput.dart';
 import 'package:zumra/widgets/app_typography.dart';
 
+
 class OtpField extends StatelessWidget {
   final TextEditingController controller;
   final void Function(String)? onCompleted;
+
 
   const OtpField({
     super.key,
     required this.controller,
     this.onCompleted,
   });
+
 
   @override
   Widget build(BuildContext context) {
@@ -25,15 +28,18 @@ class OtpField extends StatelessWidget {
       ),
     );
 
+
     final focusedPinTheme = defaultPinTheme.copyDecorationWith(
       border: Border.all(color: Theme.of(context).primaryColor),
       borderRadius: BorderRadius.circular(15),
     );
 
+
     final submittedPinTheme = defaultPinTheme.copyWith(
       decoration: defaultPinTheme.decoration
           ?.copyWith(color: const Color.fromRGBO(234, 239, 243, 1)),
     );
+
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
