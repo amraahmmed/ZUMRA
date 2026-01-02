@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:zumra/screens/login_screens/set_password_screen.dart';
+import 'package:zumra/screens/signup_screens/set_password_screen.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';

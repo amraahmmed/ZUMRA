@@ -1,6 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:zumra/screens/login_screens/reset_password_screen.dart';
+import 'package:zumra/screens/forget_password_screens/reset_password_screen.dart';
 import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';

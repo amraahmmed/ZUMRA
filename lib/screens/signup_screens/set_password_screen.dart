@@ -1,63 +1,38 @@
 import 'package:flutter/material.dart';
-import 'package:zumra/services/auth_service.dart';
-import 'package:zumra/screens/login_screens/password_changed_screen.dart';
+import 'package:zumra/screens/signup_screens/user_details_screen.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_button.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
 import 'package:zumra/widgets/custom_textfield.dart';
 
-class ResetPasswordScreen extends StatefulWidget {
+class SetPasswordScreen extends StatefulWidget {
   final String email;
-  const ResetPasswordScreen({super.key, required this.email});
+  const SetPasswordScreen({super.key, required this.email});
 
   @override
-  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+  State<SetPasswordScreen> createState() => _SetPasswordScreenState();
 }
 
-class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+class _SetPasswordScreenState extends State<SetPasswordScreen> {
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _passwordController = TextEditingController();
   final TextEditingController _confirmPasswordController =
       TextEditingController();
   bool _obscurePassword = true;
   bool _obscureConfirmPassword = true;
-  bool _isLoading = false;
 
-  void _changePassword() async {
+  void _setPassword() {
     if (_formKey.currentState!.validate()) {
-      setState(() {
-        _isLoading = true;
-      });
-      try {
-        await AuthService.resetPassword(
-          email: widget.email,
-          password: _passwordController.text,
-          confirmPassword: _confirmPasswordController.text,
-        );
-        if (mounted) {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const PasswordChangedScreen(),
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(e.toString()),
-              backgroundColor: Colors.red,
-            ),
-          );
-        }
-      } finally {
-        if (mounted) {
-          setState(() {
-            _isLoading = false;
-          });
-        }
-      }
+      debugPrint("Password Set : ${_passwordController.text}");
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => UserDetailsScreen(
+            email: widget.email,
+            password: _passwordController.text.trim(),
+          ),
+        ),
+      );
     }
   }
 
@@ -75,10 +50,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
       body: Stack(
         children: [
           Positioned.fill(
-            child: Image.asset(
-              "assets/images/back.jpg",
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset("assets/images/back.jpg", fit: BoxFit.cover),
           ),
           Container(color: Colors.white.withOpacity(0.7)),
           SafeArea(
@@ -87,28 +59,22 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  AppSpace.h40,
+                  AppSpace.h50,
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.arrow_back_ios),
                   ),
                   AppSpace.h20,
-                  Text(
-                    "Don't mess it up!",
-                    style: AppTypography.headline,
-                  ),
+                  Text("Next Privacy.", style: AppTypography.headline),
                   AppSpace.h8,
-                  Text(
-                    "This time.\nRemember your Password.",
-                    style: AppTypography.subHead,
-                  ),
+                  Text("Type your Password.", style: AppTypography.subHead),
                   AppSpace.h80,
                   Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         CustomTextField(
-                          hint: "New Password",
+                          hint: "Password",
                           icon: Icons.lock_outline,
                           isPassword: true,
                           obscureText: _obscurePassword,
@@ -126,13 +92,14 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                               return "Password must be at least 8 characters";
                             }
                             if (!RegExp(r'(?=.*[A-Z])').hasMatch(value)) {
-                            return 'Must contain an uppercase letter';
+                              return 'Must contain an uppercase letter';
                             }
                             if (!RegExp(r'(?=.*[0-9])').hasMatch(value)) {
                               return 'Must contain a number';
                             }
-                            if (!RegExp(r'(?=.*[!@#$%^&*(),.?":{}|<>])')
-                                .hasMatch(value)) {
+                            if (!RegExp(
+                              r'(?=.*[!@#$%^&*(),.?":{}|<>])',
+                            ).hasMatch(value)) {
                               return 'Must contain a special character';
                             }
                             return null;
@@ -165,11 +132,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
                     ),
                   ),
                   const Spacer(),
-                  CustomButton(
-                    text: "Change my Password",
-                    onPressed: _changePassword,
-                    isLoading: _isLoading,
-                  ),
+                  CustomButton(text: "Next", onPressed: _setPassword),
                   AppSpace.h20,
                 ],
               ),

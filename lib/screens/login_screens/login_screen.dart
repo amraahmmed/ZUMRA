@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:zumra/screens/app/home_screen.dart';
-import 'package:zumra/screens/login_screens/resend_email.dart';
-import 'package:zumra/screens/login_screens/signup_screen.dart';
-import 'package:zumra/screens/login_screens/forgot_password_screen.dart';
+import 'package:zumra/screens/signup_screens/resend_email.dart';
+import 'package:zumra/screens/signup_screens/signup_screen.dart';
+import 'package:zumra/screens/forget_password_screens/forgot_password_screen.dart';
 import 'package:zumra/services/auth_service.dart';
 import 'package:zumra/widgets/app_typography.dart';
 import 'package:zumra/widgets/custom_sizedbox.dart';
