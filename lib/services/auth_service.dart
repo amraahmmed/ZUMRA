@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String _baseUrl = "http://localhost:5000";
+  static const String _baseUrl = "http://192.168.1.7:5000";
 
   /// ================= LOGIN =================
   static Future<void> login({
@@ -56,9 +56,11 @@ class AuthService {
     if (response.statusCode == 200 || response.statusCode == 201) {
       return;
     } else {
-      final body = jsonDecode(response.body);
-      throw body["message"] ?? "Registration failed";
+      print("STATUS: ${response.statusCode}");
+      print("BODY: ${response.body}");
+      throw response.body;
     }
+
   }
 
   /// ================= RESEND CONFIRMATION EMAIL =================
@@ -81,26 +83,35 @@ class AuthService {
     }
   }
 
-  /// ================= VERIFY OTP =================
-  static Future<void> verifyOTP({
-    required String email,
-    required String otp,
-  }) async {
-    final url =
-        Uri.parse("$_baseUrl/Auth/Account/VerifyOTP?OtpCode=$otp&Email=$email");
+/// ================= VERIFY OTP =================
+static Future<void> verifyOTP({
+  required String email,
+  required String otp,
+}) async {
+  final url = Uri.parse("$_baseUrl/Auth/Account/VerifyOTP");
 
-    final response = await http.post(
-      url,
-      headers: {"Content-Type": "application/json"},
-    );
+  print("Sending OTP to server: '$otp' for Email: '$email'");
 
-    if (response.statusCode == 200) {
-      return;
-    } else {
-      final body = jsonDecode(response.body);
-      throw body["message"] ?? "OTP verification failed";
-    }
+  final response = await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode({
+      "OtpCode": otp.trim(),
+      "Email": email.trim(),
+    }),
+  );
+
+  print("Server status: ${response.statusCode}");
+  print("Server body: ${response.body}");
+
+  if (response.statusCode == 200) {
+    return;
+  } else {
+    final body = jsonDecode(response.body);
+    throw body["message"] ?? "OTP verification failed";
   }
+}
+
     /// ================= FORGOT PASSWORD =================
   static Future<void> forgotPassword({
     required String email,
